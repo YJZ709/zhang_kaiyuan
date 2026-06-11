@@ -1,0 +1,812 @@
+以下是修改后的互动课件代码，已将小正方形边长改为1分米，所有周长数据和单位说明均已同步更新。
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>周长最短探究实验室 | 单位：分米 | 可拖拽修改拼法</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background: #eef4e6;
+            font-family: 'Segoe UI', 'Poppins', 'Noto Sans SC', system-ui;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .app-wrapper {
+            width: 100%;
+            max-width: 1600px;
+            background: #fffef5;
+            border-radius: 56px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.1);
+            padding: 22px 28px 32px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            color: #2a6b2f;
+            margin: 0 0 6px 0;
+            border-left: 7px solid #f4a261;
+            padding-left: 22px;
+        }
+        .sub {
+            color: #6a7c5a;
+            margin-bottom: 24px;
+            padding-left: 30px;
+            font-size: 0.9rem;
+        }
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            align-items: center;
+            background: #eaf5e6;
+            padding: 10px 24px;
+            border-radius: 60px;
+            margin-bottom: 28px;
+        }
+        .ctrl-group {
+            background: white;
+            padding: 5px 18px;
+            border-radius: 40px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+        }
+        label { font-weight: 600; color: #2a6b2f; }
+        input {
+            width: 80px;
+            padding: 6px 8px;
+            text-align: center;
+            border: 2px solid #cfe0cf;
+            border-radius: 32px;
+            font-weight: bold;
+            background: #fff;
+        }
+        button {
+            background: #2e7d32;
+            border: none;
+            color: white;
+            padding: 6px 20px;
+            border-radius: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+        button:hover { background: #1b5e20; transform: scale(0.97);}
+        .reset-btn { background: #e67e22; }
+        .reset-btn:hover { background: #c75f12; }
+        .next-btn { background: #2c6e9e; }
+        .next-btn:hover { background: #1f5480; }
+        
+        .main-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+        }
+        .build-area {
+            flex: 3;
+            min-width: 320px;
+            background: #fef8e7;
+            border-radius: 44px;
+            padding: 20px;
+            box-shadow: inset 0 0 0 1px #fff6e0, 0 10px 20px rgba(0,0,0,0.05);
+        }
+        .section-title {
+            font-weight: bold;
+            color: #b45f2b;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+        .material-grid {
+            background: #fff2df;
+            border-radius: 36px;
+            padding: 18px 16px;
+            margin-bottom: 24px;
+            border: 2px dashed #deb887;
+            min-height: 130px;
+        }
+        .material-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .drag-block {
+            width: 36px;
+            height: 36px;
+            background: radial-gradient(circle at 35% 35%, #ffe1a0, #f7bc5a);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #5a3a1a;
+            font-size: 0.7rem;
+            cursor: grab;
+            transition: 0.05s;
+        }
+        .drag-block:active { cursor: grabbing; background: #ffae42; transform: scale(0.96);}
+        
+        .canvas-wrapper {
+            background: #fff7e8;
+            border-radius: 36px;
+            padding: 12px;
+            border: 2px solid #e5d5b0;
+            overflow: auto;
+            max-height: 70vh;
+        }
+        .dynamic-canvas {
+            position: relative;
+            background-image: linear-gradient(to right, #cdc9b4 1px, transparent 1px),
+                              linear-gradient(to bottom, #cdc9b4 1px, transparent 1px);
+            background-color: #fff1dc;
+            border-radius: 28px;
+            min-height: 600px;
+            transition: all 0.1s;
+        }
+        .placed-block {
+            width: 36px;
+            height: 36px;
+            background: radial-gradient(circle at 30% 30%, #ffcf8a, #f5a623);
+            border: 1px solid #b97f2e;
+            border-radius: 8px;
+            position: absolute;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #4c2f10;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+            z-index: 10;
+            transition: 0.05s linear;
+        }
+        .placed-block:active { cursor: grabbing; background: #ff9f2e; transform: scale(1.02); }
+        
+        .layout-boundary {
+            position: absolute;
+            border: 3px solid #3c8f3c;
+            border-radius: 12px;
+            background: rgba(60, 143, 60, 0.05);
+            pointer-events: none;
+            z-index: 5;
+            box-shadow: 0 0 0 1px #fff9 inset;
+        }
+        .layout-label {
+            position: absolute;
+            background: #2e7d32;
+            color: white;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 20px;
+            white-space: nowrap;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 6;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        .stats-panel {
+            flex: 1.2;
+            min-width: 290px;
+            background: white;
+            border-radius: 40px;
+            padding: 20px 18px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+        }
+        .current-card {
+            background: #2b5e2c;
+            color: white;
+            border-radius: 32px;
+            padding: 14px 18px;
+            margin-bottom: 24px;
+        }
+        .big-perimeter {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fffef9;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+        .compare-table th, .compare-table td {
+            padding: 10px 6px;
+            text-align: center;
+            border-bottom: 1px solid #efe3cd;
+        }
+        .compare-table th {
+            background: #e6f0e2;
+            color: #2b5e2c;
+        }
+        .best-row {
+            background-color: #d9f0cc !important;
+            font-weight: bold;
+            border-left: 4px solid #3c9e3c;
+        }
+        .reflect-card {
+            background: #fff3e3;
+            border-radius: 24px;
+            padding: 12px 16px;
+            margin-top: 16px;
+            border-left: 5px solid #f4a261;
+            transition: all 0.2s;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #8faa7a;
+            margin-top: 28px;
+        }
+        .unit-note {
+            font-size: 0.75rem;
+            display: inline-block;
+            margin-left: 4px;
+        }
+        @media (max-width: 780px) {
+            .drag-block, .placed-block { width: 30px; height: 30px; font-size: 0.65rem; }
+            .dynamic-canvas { background-size: 30px 30px; }
+            .app-wrapper { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-wrapper">
+    <h1>🧩 周长最短实验室 | 单位：分米</h1>
+    <div class="sub">人教版·三年级下册 | 每个小正方形边长1分米 | 拖拽拼摆→可随时修改→多种拼法自动对比</div>
+    
+    <div class="toolbar">
+        <div class="ctrl-group">
+            <span>🔢 小正方形总数</span>
+            <input type="number" id="totalCountInput" min="1" max="100" value="16" step="1">
+            <button id="applyTotalBtn">✓ 设定并重置</button>
+        </div>
+        <div class="ctrl-group">
+            <button id="clearAllBtn" class="reset-btn">🗑️ 清空所有拼法</button>
+            <button id="nextLayoutBtn" class="next-btn">📌 保存当前拼法 & 继续拼下一种</button>
+        </div>
+        <div class="ctrl-group">
+            <span>💡 拼错了？直接在右侧拖拽小方格调整位置，已保存拼法不会丢失</span>
+        </div>
+    </div>
+    
+    <div class="main-row">
+        <div class="build-area">
+            <div class="material-grid">
+                <div class="section-title">📦 素材区 (每个小正方形边长1分米)</div>
+                <div class="material-items" id="materialContainer"></div>
+            </div>
+            <div class="canvas-wrapper">
+                <div class="section-title">🎨 拼摆区 (直接拖拽任意小方格进行修改)</div>
+                <div class="dynamic-canvas" id="canvasArea" style="position: relative;"></div>
+                <div style="font-size:12px; text-align:center; margin-top:12px; color:#ad8b62;">
+                    ✅ 拖拽左侧素材添加 → 拖拽右侧任意小方格自由调整 → 形成完整矩形后点击「保存」记录周长(分米)
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats-panel">
+            <div class="current-card">
+                <div style="font-weight: bold; font-size: 1.2rem;">📐 当前未保存的拼组</div>
+                <div id="currentShapeDesc">拖拽方块拼成完整长方形</div>
+                <div class="big-perimeter" id="currentPerimeterVal">—</div>
+                <div id="currentFormula">周长 = (长+宽)×2 (分米)</div>
+                <div>✅ 每个小正方形边长 = 1分米</div>
+            </div>
+            <div>
+                <h3 style="margin:0 0 8px 0; font-size:1.1rem;">📊 不同拼法周长对比表 (单位:分米)</h3>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table class="compare-table" id="compareTable">
+                        <thead><tr><th>拼法(长×宽)</th><th>长(dm)</th><th>宽(dm)</th><th>周长(dm)</th><th>🏆标记</th></tr></thead>
+                        <tbody id="tableBody"><tr><td colspan="5">✨ 保存拼法后显示对比数据(分米)</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="reflect-card" id="reflectBox">
+                <div style="font-weight: bold;">💡 数学发现</div>
+                <div id="reflectContent">✨ 拼出多种长方形并对比后，结论将自动出现 ✨</div>
+            </div>
+        </div>
+    </div>
+    <footer>✏️ 每个小正方形边长1分米。拖拽移动调整，已保存的拼法会保留彩色边框和表格记录。点击「保存」可将当前新拼法加入对比表。</footer>
+</div>
+
+<script>
+    // ---------- 核心状态 ----------
+    let totalCount = 16;                    
+    let activePlacedBlocks = [];            // 所有放置在画布上的方块
+    let layoutRecords = new Map();          // key "长x宽" -> { length, width, perimeter, groupId }
+    let currentGroupId = 0;
+    let groupBlockMap = new Map();          // groupId -> 属于该拼组的方块数组
+    let tempNewGroupBlocks = [];            // 未保存的临时拼组方块（新拖拽的、还没保存的）
+    
+    // DOM 元素
+    const materialContainer = document.getElementById('materialContainer');
+    const canvasArea = document.getElementById('canvasArea');
+    const totalInput = document.getElementById('totalCountInput');
+    const applyTotalBtn = document.getElementById('applyTotalBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const nextLayoutBtn = document.getElementById('nextLayoutBtn');
+    const tableBody = document.getElementById('tableBody');
+    const currentShapeDesc = document.getElementById('currentShapeDesc');
+    const currentPerimeterSpan = document.getElementById('currentPerimeterVal');
+    const currentFormulaSpan = document.getElementById('currentFormula');
+    const reflectContentDiv = document.getElementById('reflectContent');
+    
+    const GRID_SIZE = 36;      // 像素，仅用于界面布局，数值代表1分米
+    
+    // 调整画布背景大小
+    function resizeCanvasBackground() {
+        const maxBlocksHint = totalCount * 8;
+        const colsNeeded = Math.ceil(Math.sqrt(maxBlocksHint)) + 5;
+        const rowsNeeded = Math.ceil(maxBlocksHint / colsNeeded) + 5;
+        const minWidth = Math.max(700, colsNeeded * GRID_SIZE + 100);
+        const minHeight = Math.max(600, rowsNeeded * GRID_SIZE + 100);
+        canvasArea.style.minWidth = `${minWidth}px`;
+        canvasArea.style.minHeight = `${minHeight}px`;
+        canvasArea.style.backgroundSize = `${GRID_SIZE}px ${GRID_SIZE}px`;
+        canvasArea.style.backgroundImage = `linear-gradient(to right, #cdc9b4 1px, transparent 1px), linear-gradient(to bottom, #cdc9b4 1px, transparent 1px)`;
+    }
+    
+    // 素材区刷新 (总是补满 totalCount 个)
+    function refreshMaterialPool() {
+        materialContainer.innerHTML = '';
+        for (let i = 0; i < totalCount; i++) {
+            const block = document.createElement('div');
+            block.className = 'drag-block';
+            block.textContent = '1dm';
+            block.setAttribute('draggable', 'true');
+            block.addEventListener('dragstart', handleMaterialDragStart);
+            materialContainer.appendChild(block);
+        }
+    }
+    
+    function handleMaterialDragStart(e) {
+        e.dataTransfer.setData('text/plain', 'new-block');
+        e.dataTransfer.effectAllowed = 'copy';
+        const dragIcon = document.createElement('div');
+        dragIcon.textContent = '1dm';
+        e.dataTransfer.setDragImage(dragIcon, 10, 10);
+    }
+    
+    function allowDrop(e) { e.preventDefault(); }
+    
+    // 判断方块属于哪个已保存组
+    function getGroupIdOfBlock(block) {
+        for (let [gid, blocks] of groupBlockMap.entries()) {
+            if (blocks.includes(block)) return gid;
+        }
+        return null;
+    }
+    
+    // 重新绘制所有已保存组的边框和标签（带上单位 dm）
+    function redrawAllBoundaries() {
+        document.querySelectorAll('.layout-boundary, .layout-label').forEach(el => el.remove());
+        for (let [groupId, blocks] of groupBlockMap.entries()) {
+            if (!blocks.length) continue;
+            const points = blocks.map(blk => ({
+                x: Math.round(parseInt(blk.style.left) / GRID_SIZE),
+                y: Math.round(parseInt(blk.style.top) / GRID_SIZE)
+            }));
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            for (let p of points) {
+                minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+                minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+            }
+            const length = maxX - minX + 1;
+            const widthVal = maxY - minY + 1;
+            const perimeter = 2 * (length + widthVal);
+            const left = minX * GRID_SIZE;
+            const top = minY * GRID_SIZE;
+            const w = (maxX - minX + 1) * GRID_SIZE;
+            const h = (maxY - minY + 1) * GRID_SIZE;
+            const borderDiv = document.createElement('div');
+            borderDiv.className = 'layout-boundary';
+            borderDiv.style.left = `${left}px`;
+            borderDiv.style.top = `${top}px`;
+            borderDiv.style.width = `${w}px`;
+            borderDiv.style.height = `${h}px`;
+            borderDiv.style.borderColor = `hsl(${(groupId * 70) % 360}, 65%, 45%)`;
+            borderDiv.setAttribute('data-group-id', groupId);
+            const label = document.createElement('div');
+            label.className = 'layout-label';
+            label.innerText = `${length}dm × ${widthVal}dm  周长=${perimeter}dm`;
+            label.style.left = `${left + 8}px`;
+            label.style.top = `${top - 26}px`;
+            label.style.backgroundColor = `hsl(${(groupId * 70) % 360}, 70%, 40%)`;
+            label.setAttribute('data-group-id', groupId);
+            canvasArea.appendChild(borderDiv);
+            canvasArea.appendChild(label);
+        }
+    }
+    
+    // 更新所有已保存组的周长（当拖拽移动后调用）
+    function updateAllSavedGroupsAfterMove() {
+        let changed = false;
+        for (let [groupId, blocks] of groupBlockMap.entries()) {
+            if (!blocks.length) continue;
+            const points = blocks.map(blk => ({
+                x: Math.round(parseInt(blk.style.left) / GRID_SIZE),
+                y: Math.round(parseInt(blk.style.top) / GRID_SIZE)
+            }));
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            for (let p of points) {
+                minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+                minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+            }
+            const length = maxX - minX + 1;
+            const widthVal = maxY - minY + 1;
+            const perimeter = 2 * (length + widthVal);
+            const newKey = `${length}x${widthVal}`;
+            let oldKey = null;
+            for (let [k, v] of layoutRecords.entries()) {
+                if (v.groupId === groupId) { oldKey = k; break; }
+            }
+            if (oldKey !== newKey || (oldKey && layoutRecords.get(oldKey)?.perimeter !== perimeter)) {
+                if (oldKey) layoutRecords.delete(oldKey);
+                layoutRecords.set(newKey, { length, width: widthVal, perimeter, groupId });
+                changed = true;
+            }
+        }
+        if (changed) {
+            updateComparisonTable();
+            updateDiscoveryAndHints();
+            redrawAllBoundaries();
+        }
+    }
+    
+    // 从素材区拖拽添加新方块（加入临时组）
+    function handleCanvasDrop(e) {
+        e.preventDefault();
+        const rect = canvasArea.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+        let left = Math.floor(x / GRID_SIZE) * GRID_SIZE;
+        let top = Math.floor(y / GRID_SIZE) * GRID_SIZE;
+        left = Math.min(Math.max(0, left), canvasArea.clientWidth - GRID_SIZE);
+        top = Math.min(Math.max(0, top), canvasArea.clientHeight - GRID_SIZE);
+        
+        for (let blk of activePlacedBlocks) {
+            let l = parseInt(blk.style.left);
+            let t = parseInt(blk.style.top);
+            if (Math.abs(l - left) < GRID_SIZE && Math.abs(t - top) < GRID_SIZE) return;
+        }
+        
+        const newBlock = document.createElement('div');
+        newBlock.className = 'placed-block';
+        newBlock.textContent = '1dm';
+        newBlock.style.left = `${left}px`;
+        newBlock.style.top = `${top}px`;
+        newBlock.setAttribute('draggable', 'true');
+        newBlock.addEventListener('dragstart', handlePlacedDragStart);
+        newBlock.addEventListener('dragend', handlePlacedDragEnd);
+        canvasArea.appendChild(newBlock);
+        activePlacedBlocks.push(newBlock);
+        tempNewGroupBlocks.push(newBlock);
+        
+        if (tempNewGroupBlocks.length === totalCount) {
+            checkAndShowTempGroupInfo();
+        } else {
+            currentShapeDesc.innerHTML = `📦 临时拼组 ${tempNewGroupBlocks.length}/${totalCount} 个方块，继续拖拽添加 (每个1dm)`;
+            currentPerimeterSpan.innerText = '—';
+            currentFormulaSpan.innerText = '还需凑齐所有小正方形';
+        }
+    }
+    
+    // 检测临时组是否形成规整长方形
+    function checkAndShowTempGroupInfo() {
+        if (tempNewGroupBlocks.length !== totalCount) return;
+        const points = tempNewGroupBlocks.map(blk => ({
+            x: Math.round(parseInt(blk.style.left) / GRID_SIZE),
+            y: Math.round(parseInt(blk.style.top) / GRID_SIZE)
+        }));
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (let p of points) {
+            minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+            minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+        }
+        const length = maxX - minX + 1;
+        const widthVal = maxY - minY + 1;
+        if (length * widthVal !== totalCount) {
+            currentShapeDesc.innerHTML = `⚠️ 当前拼组不是完整矩形（有空隙或多出），请调整对齐。`;
+            return;
+        }
+        const gridSet = new Set(points.map(p => `${p.x},${p.y}`));
+        let full = true;
+        for (let i = minX; i <= maxX; i++) {
+            for (let j = minY; j <= maxY; j++) {
+                if (!gridSet.has(`${i},${j}`)) { full = false; break; }
+            }
+        }
+        if (!full) {
+            currentShapeDesc.innerHTML = `⚠️ 矩形区域有空缺，请填满所有格子。`;
+            return;
+        }
+        const perimeter = 2 * (length + widthVal);
+        currentShapeDesc.innerHTML = `✅ 可保存: ${widthVal}行 × ${length}列 (长=${length}dm,宽=${widthVal}dm) 周长=${perimeter}dm`;
+        currentPerimeterSpan.innerText = `${perimeter} dm`;
+        currentFormulaSpan.innerHTML = `周长 = (长${length}dm + 宽${widthVal}dm) × 2 = ${perimeter} dm`;
+    }
+    
+    // 保存当前临时拼组为正式记录
+    function saveCurrentTempGroup() {
+        if (tempNewGroupBlocks.length !== totalCount) {
+            alert(`请先凑齐 ${totalCount} 个方块并拼成完整长方形。当前 ${tempNewGroupBlocks.length} 个。`);
+            return false;
+        }
+        const points = tempNewGroupBlocks.map(blk => ({
+            x: Math.round(parseInt(blk.style.left) / GRID_SIZE),
+            y: Math.round(parseInt(blk.style.top) / GRID_SIZE)
+        }));
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (let p of points) {
+            minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+            minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+        }
+        const length = maxX - minX + 1;
+        const widthVal = maxY - minY + 1;
+        if (length * widthVal !== totalCount) {
+            alert('当前拼组不是完整矩形，请紧密铺满所有格子。');
+            return false;
+        }
+        const gridSet = new Set(points.map(p => `${p.x},${p.y}`));
+        for (let i = minX; i <= maxX; i++) {
+            for (let j = minY; j <= maxY; j++) {
+                if (!gridSet.has(`${i},${j}`)) {
+                    alert('矩形区域有缺块，请填满所有格子。');
+                    return false;
+                }
+            }
+        }
+        const key = `${length}x${widthVal}`;
+        if (layoutRecords.has(key)) {
+            alert(`拼法 长${length}dm×宽${widthVal}dm 已经记录过，请尝试另一种不同形状。`);
+            return false;
+        }
+        const perimeter = 2 * (length + widthVal);
+        const groupId = ++currentGroupId;
+        layoutRecords.set(key, { length, width: widthVal, perimeter, groupId });
+        groupBlockMap.set(groupId, [...tempNewGroupBlocks]);
+        
+        // 绘制边框
+        const left = minX * GRID_SIZE;
+        const top = minY * GRID_SIZE;
+        const w = (maxX - minX + 1) * GRID_SIZE;
+        const h = (maxY - minY + 1) * GRID_SIZE;
+        const borderDiv = document.createElement('div');
+        borderDiv.className = 'layout-boundary';
+        borderDiv.style.left = `${left}px`;
+        borderDiv.style.top = `${top}px`;
+        borderDiv.style.width = `${w}px`;
+        borderDiv.style.height = `${h}px`;
+        borderDiv.style.borderColor = `hsl(${(groupId * 70) % 360}, 65%, 45%)`;
+        borderDiv.setAttribute('data-group-id', groupId);
+        const label = document.createElement('div');
+        label.className = 'layout-label';
+        label.innerText = `${length}dm × ${widthVal}dm  周长=${perimeter}dm`;
+        label.style.left = `${left + 8}px`;
+        label.style.top = `${top - 26}px`;
+        label.style.backgroundColor = `hsl(${(groupId * 70) % 360}, 70%, 40%)`;
+        label.setAttribute('data-group-id', groupId);
+        canvasArea.appendChild(borderDiv);
+        canvasArea.appendChild(label);
+        
+        tempNewGroupBlocks = [];
+        updateComparisonTable();
+        updateDiscoveryAndHints();
+        refreshMaterialPool();
+        
+        currentShapeDesc.innerHTML = `✅ 已保存拼法 (长${length}dm×宽${widthVal}dm)，可继续拼下一种。`;
+        currentPerimeterSpan.innerText = `${perimeter} dm`;
+        currentFormulaSpan.innerHTML = `周长 = (长${length}dm + 宽${widthVal}dm) × 2 = ${perimeter} dm`;
+        return true;
+    }
+    
+    // 拖拽移动逻辑（核心：允许任意修改）
+    let draggingBlock = null;
+    function handlePlacedDragStart(e) {
+        draggingBlock = e.target.closest('.placed-block');
+        if (!draggingBlock) return;
+        e.dataTransfer.setData('text/plain', 'move-block');
+        e.dataTransfer.effectAllowed = 'move';
+        const dragImg = draggingBlock.cloneNode(true);
+        dragImg.style.opacity = '0.5';
+        e.dataTransfer.setDragImage(dragImg, 20, 20);
+    }
+    function handleCanvasDragOver(e) { e.preventDefault(); }
+    function handleCanvasDropForMove(e) {
+        e.preventDefault();
+        if (!draggingBlock) return;
+        const rect = canvasArea.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let y = e.clientY - rect.top;
+        let newLeft = Math.floor(x / GRID_SIZE) * GRID_SIZE;
+        let newTop = Math.floor(y / GRID_SIZE) * GRID_SIZE;
+        newLeft = Math.min(Math.max(0, newLeft), canvasArea.clientWidth - GRID_SIZE);
+        newTop = Math.min(Math.max(0, newTop), canvasArea.clientHeight - GRID_SIZE);
+        let overlap = false;
+        for (let blk of activePlacedBlocks) {
+            if (blk === draggingBlock) continue;
+            let l = parseInt(blk.style.left);
+            let t = parseInt(blk.style.top);
+            if (Math.abs(l - newLeft) < GRID_SIZE && Math.abs(t - newTop) < GRID_SIZE) {
+                overlap = true;
+                break;
+            }
+        }
+        if (!overlap) {
+            draggingBlock.style.left = `${newLeft}px`;
+            draggingBlock.style.top = `${newTop}px`;
+        }
+    }
+    function handlePlacedDragEnd(e) {
+        if (draggingBlock) {
+            const groupId = getGroupIdOfBlock(draggingBlock);
+            if (groupId !== null) {
+                const groupBlocks = groupBlockMap.get(groupId);
+                if (groupBlocks) {
+                    const points = groupBlocks.map(blk => ({
+                        x: Math.round(parseInt(blk.style.left) / GRID_SIZE),
+                        y: Math.round(parseInt(blk.style.top) / GRID_SIZE)
+                    }));
+                    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                    for (let p of points) {
+                        minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+                        minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+                    }
+                    const length = maxX - minX + 1;
+                    const widthVal = maxY - minY + 1;
+                    const perimeter = 2 * (length + widthVal);
+                    const newKey = `${length}x${widthVal}`;
+                    let oldKey = null;
+                    for (let [k, v] of layoutRecords.entries()) {
+                        if (v.groupId === groupId) { oldKey = k; break; }
+                    }
+                    if (oldKey) layoutRecords.delete(oldKey);
+                    layoutRecords.set(newKey, { length, width: widthVal, perimeter, groupId });
+                    redrawAllBoundaries();
+                    updateComparisonTable();
+                    updateDiscoveryAndHints();
+                }
+            } else {
+                if (tempNewGroupBlocks.length === totalCount) {
+                    checkAndShowTempGroupInfo();
+                } else {
+                    currentShapeDesc.innerHTML = `📦 临时拼组 ${tempNewGroupBlocks.length}/${totalCount} 个方块 (每个1dm)`;
+                    currentPerimeterSpan.innerText = '—';
+                }
+            }
+        }
+        draggingBlock = null;
+        if (tempNewGroupBlocks.length === totalCount) checkAndShowTempGroupInfo();
+    }
+    
+    // 更新对比表格 (带单位 dm)
+    function updateComparisonTable() {
+        if (layoutRecords.size === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5">✨ 保存拼法后生成对比数据(单位:分米)</td></tr>';
+            return;
+        }
+        let records = Array.from(layoutRecords.values());
+        let minPeri = Infinity;
+        for (let rec of records) if (rec.perimeter < minPeri) minPeri = rec.perimeter;
+        records.sort((a,b) => a.perimeter - b.perimeter);
+        tableBody.innerHTML = '';
+        for (let rec of records) {
+            const isMin = (rec.perimeter === minPeri);
+            const tr = document.createElement('tr');
+            if (isMin) tr.className = 'best-row';
+            tr.innerHTML = `
+                <td>${rec.length}dm × ${rec.width}dm</td>
+                <td>${rec.length} dm</td>
+                <td>${rec.width} dm</td>
+                <td>${rec.perimeter} dm</td>
+                <td>${isMin ? '🏆 最短周长' : (rec.length === rec.width ? '■ 正方形' : '—')}</td>
+            `;
+            tableBody.appendChild(tr);
+        }
+    }
+    
+    // 动态数学发现 (带单位说明)
+    function updateDiscoveryAndHints() {
+        const recordCount = layoutRecords.size;
+        if (recordCount === 0) {
+            reflectContentDiv.innerHTML = `✨ 拼出多种长方形并对比后，结论将自动出现 ✨`;
+            return;
+        }
+        if (recordCount === 1) {
+            reflectContentDiv.innerHTML = `🧪 目前只有一种拼法，继续尝试不同的长宽组合，对比周长(分米)。`;
+            return;
+        }
+        let records = Array.from(layoutRecords.values());
+        let minPeri = Infinity;
+        let bestLayout = '';
+        for (let rec of records) {
+            if (rec.perimeter < minPeri) { minPeri = rec.perimeter; bestLayout = `${rec.length}dm×${rec.width}dm`; }
+        }
+        let sortedByDiff = [...records].sort((a,b) => (Math.abs(a.length - a.width) - Math.abs(b.length - b.width)));
+        const closestDiff = sortedByDiff[0];
+        const isClosestDiffShortest = (closestDiff.perimeter === minPeri);
+        let conclusion = '';
+        if (isClosestDiffShortest) {
+            conclusion = `📐 通过对比 ${recordCount} 种拼法发现：<strong>长和宽越接近，周长越短</strong>。`;
+            if (closestDiff.length === closestDiff.width) {
+                conclusion += ` 其中 ${closestDiff.length}dm×${closestDiff.width}dm 是正方形，周长最短(${minPeri}分米)。`;
+            } else {
+                conclusion += ` 长${closestDiff.length}dm与宽${closestDiff.width}dm相差最小，周长=${closestDiff.perimeter}分米 最短。`;
+            }
+        } else {
+            conclusion = `📐 通过对比 ${recordCount} 种拼法发现：<strong>一般情况下，长和宽越接近，周长越短。</strong> 你可以继续尝试更多拼法验证。`;
+        }
+        conclusion += ` 当前最短周长是 ${bestLayout} = ${minPeri}分米。`;
+        reflectContentDiv.innerHTML = conclusion;
+    }
+    
+    // 清空所有
+    function clearAllLayouts() {
+        for (let blk of activePlacedBlocks) blk.remove();
+        activePlacedBlocks = [];
+        tempNewGroupBlocks = [];
+        document.querySelectorAll('.layout-boundary, .layout-label').forEach(el => el.remove());
+        layoutRecords.clear();
+        groupBlockMap.clear();
+        currentGroupId = 0;
+        currentShapeDesc.innerHTML = '已清空所有拼法，可重新拖拽方块拼摆。';
+        currentPerimeterSpan.innerText = '—';
+        currentFormulaSpan.innerText = '周长 = (长+宽)×2 (分米)';
+        refreshMaterialPool();
+        updateComparisonTable();
+        updateDiscoveryAndHints();
+    }
+    
+    function changeTotalCount(newTotal) {
+        totalCount = Math.max(1, Math.min(100, newTotal));
+        totalInput.value = totalCount;
+        clearAllLayouts();
+        resizeCanvasBackground();
+        refreshMaterialPool();
+        updateDiscoveryAndHints();
+    }
+    
+    // 事件绑定
+    applyTotalBtn.addEventListener('click', () => {
+        let newVal = parseInt(totalInput.value, 10);
+        if (isNaN(newVal)) newVal = 16;
+        changeTotalCount(newVal);
+    });
+    clearAllBtn.addEventListener('click', clearAllLayouts);
+    nextLayoutBtn.addEventListener('click', saveCurrentTempGroup);
+    
+    canvasArea.addEventListener('dragover', allowDrop);
+    canvasArea.addEventListener('drop', handleCanvasDrop);
+    canvasArea.addEventListener('dragover', handleCanvasDragOver);
+    canvasArea.addEventListener('drop', handleCanvasDropForMove);
+    
+    function init() {
+        totalCount = 16;
+        totalInput.value = 16;
+        resizeCanvasBackground();
+        refreshMaterialPool();
+        clearAllLayouts();
+    }
+    init();
+</script>
+</body>
+</html>
+```
